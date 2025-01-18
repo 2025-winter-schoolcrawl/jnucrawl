@@ -3,6 +3,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# PyCharm 프로젝트 설정 폴더 무시
+.idea/
+
 # C extensions
 *.so
 
