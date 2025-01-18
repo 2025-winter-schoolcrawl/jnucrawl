@@ -52,7 +52,7 @@ def crawl_jnu_titles():
         with open(f_name, 'a', encoding='utf-8') as f:
             for line in new_titles_list:
                 if line in diff:
-                    f.write("=======process on=======" + "\n" +  formatted_time + line + "\n")
+                    f.write(formatted_time + line + "\n")
                     print("<new>" + formatted_time + line)  # 새로 추가된 라인만 print
     else:
         # 새로 추가된 내용이 없으면 안내 메시지
