@@ -5,6 +5,9 @@ import os
 
 # 웹 페이지 URLs
 urls = [
+    {"url": "https://eng.jnu.ac.kr/eng/7343/subview.do", "source": "공과대학"},
+    {"url": "https://sw.jnu.ac.kr/sw/8250/subview.do", "source": "소프트웨어공학과"},
+    {"url": "https://eceng.jnu.ac.kr/eceng/20079/subview.do", "source": "전자컴퓨터공학부"},
     {"url": "https://cvg.jnu.ac.kr/cvg/3608/subview.do", "source": "AI융합대학"},
     {"url": "https://aisw.jnu.ac.kr/aisw/518/subview.do", "source": "인공지능학부"}
 ]
@@ -14,7 +17,7 @@ txt_file = "crawl.txt"
 
 # 오늘 날짜 및 기준 날짜 계산
 today = datetime.now()
-threshold_date = today - timedelta(days=40)
+threshold_date = today - timedelta(days=20)
 
 # 기존 공지사항 불러오기
 def load_existing_notices(file_path):
@@ -27,7 +30,7 @@ def load_existing_notices(file_path):
 def save_new_notices(file_path, notices):
     with open(file_path, "a", encoding="utf-8") as file:
         for notice in notices:
-            file.write(f"{notice['date']}|{notice['title']}|{notice['link']}\n")
+            file.write(f"{notice['date']}|{notice['source']}|{notice['title']}\n")
 
 # 공지사항 추출 함수
 def fetch_notices(url, source, existing_notices):
@@ -60,7 +63,7 @@ def fetch_notices(url, source, existing_notices):
 
             # 날짜 비교 후 필터링
             if threshold_date <= notice_date <= today:
-                notice_key = f"{date_text}|{title}|{link}"
+                notice_key = f"{date_text}|{source}|{title}"
                 if notice_key not in existing_notices:
                     new_notices.append({
                         'title': title,
