@@ -5,12 +5,12 @@ import os
 
 # 웹 페이지 URLs
 urls = [
-    {"url": "https://www.jnu.ac.kr/WebApp/web/HOM/COM/Board/board.aspx?boardID=5&bbsMode=list&cate=0", "source": "전남대학교 공지사항"},
     {"url": "https://eng.jnu.ac.kr/eng/7343/subview.do", "source": "공과대학"},
     {"url": "https://sw.jnu.ac.kr/sw/8250/subview.do", "source": "소프트웨어공학과"},
     {"url": "https://eceng.jnu.ac.kr/eceng/20079/subview.do", "source": "전자컴퓨터공학부"},
     {"url": "https://cvg.jnu.ac.kr/cvg/3608/subview.do", "source": "AI융합대학"},
-    {"url": "https://aisw.jnu.ac.kr/aisw/518/subview.do", "source": "인공지능학부"}
+    {"url": "https://aisw.jnu.ac.kr/aisw/518/subview.do", "source": "인공지능학부"},
+    {"url": "https://www.jnu.ac.kr/WebApp/web/HOM/COM/Board/board.aspx?boardID=5&bbsMode=list&cate=0", "source": "전남대학교 공지사항"}
 ]
 
 # 파일 경로
@@ -18,7 +18,7 @@ txt_file = "crawl.txt"
 
 # 오늘 날짜 및 기준 날짜 계산
 today = datetime.now()
-threshold_date = today - timedelta(days=2)
+threshold_date = today - timedelta(days=3)
 
 # 기존 공지사항 불러오기
 def load_existing_notices(file_path):
@@ -54,7 +54,8 @@ def fetch_notices(url, source, existing_notices):
             date_text = date_td.text.strip()
             title_parts = [part.strip() for part in title_td.stripped_strings]
             title = " ".join(title_parts)
-            link = url.split('/subview.do')[0] + link_tag['href']
+            base_url = "/".join(url.split('/')[:3])  # Extract base URL (e.g., https://sw.jnu.ac.kr)
+            link = base_url + link_tag['href']
 
             # 날짜 파싱
             try:
@@ -95,7 +96,7 @@ def fetch_notices_multi_page(base_url, source, existing_notices, max_pages=3):
 
         for row in rows:
             # 날짜 및 제목 찾기
-            date_td = row.find_all('td', class_='under')[-2]  # 마지막 <td class="under">가 날짜
+            date_td = row.find_all('td', class_='under')[-2]
             title_td = row.find('td', class_='title')
             link_tag = title_td.find('a') if title_td else None
 
@@ -144,6 +145,7 @@ if all_new_notices:
 
 # 결과 출력
 if all_new_notices:
+    print("새로운 공지사항:")
     for notice in all_new_notices:
         print(f"[{notice['source']}] {notice['title']}")
         print(f"- {notice['link']}")
