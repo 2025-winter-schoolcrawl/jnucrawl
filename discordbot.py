@@ -5,7 +5,16 @@ import os
 import discord
 from discord.ext import commands
 from dotenv import load_dotenv
-
+import asyncio
+import signal
+import sys
+        
+# === CustomBot 클래스 정의 ===
+class CustomBot(commands.Bot):
+    async def setup_hook(self):
+        """봇 초기화 시 자동 공지 작업 등록"""
+        self.loop.create_task(auto_send_notices())
+        
 # === 환경 변수 및 봇 설정 ===
 load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")
@@ -13,7 +22,7 @@ TOKEN = os.getenv("DISCORD_TOKEN")
 intents = discord.Intents.default()
 intents.message_content = True  # 메시지 내용 접근 활성화
 intents.members = True          # 멤버 정보 접근 활성화
-bot = commands.Bot(command_prefix="!", intents=intents)
+bot = CustomBot(command_prefix="!", intents=intents)
 
 # === URL 및 역할/채널 매핑 설정 ===
 role_emoji_map = {
@@ -197,26 +206,6 @@ async def on_reaction_remove(reaction, user):
             await user.remove_roles(role)
             # await user.send(f"{data['role']} 역할이 제거되었습니다!")
 
-# @bot.command()
-# async def 공지(ctx):
-#     """모든 사이트의 공지사항 출력"""
-#     existing_notices = load_existing_notices(txt_file)
-#     all_new_notices = []
-
-#     for emoji, data in role_emoji_map.items():
-#         if data.get("multi_page"):
-#             new_notices = fetch_notices_multi_page(data["url"], data["role"], existing_notices)
-#         else:
-#             new_notices = fetch_notices(data["url"], data["role"], existing_notices)
-#         all_new_notices.extend(new_notices)
-
-#     if all_new_notices:
-#         save_new_notices(txt_file, all_new_notices)
-#         for notice in all_new_notices:
-#             await ctx.send(f"[{notice['source']}] {notice['title']}\n{notice['link']}")
-#     else:
-#         await ctx.send("새로운 공지사항이 없습니다!")
-
 @bot.command()
 async def 공지(ctx):
     """해당 채널에 연결된 사이트의 공지사항만 출력"""
@@ -236,9 +225,63 @@ async def 공지(ctx):
     if new_notices:
         save_new_notices(txt_file, new_notices)
         for notice in new_notices:
-            await ctx.send(f"[{notice['source']}] {notice['title']}\n{notice['link']}")
+            await ctx.send(f"{notice['title']}\n[링크 보기]({notice['link']})")
     else:
         await ctx.send("새로운 공지사항이 없습니다!")
+        
+        
+# === 채널별 자동 공지 전송 기능 ===
+async def wait_until_exact_minute():
+    """정각(00분)까지 대기"""
+    now = datetime.now()
+    # 다음 정각(00분) 시간 계산
+    next_minute = (now + timedelta(minutes=5)).replace(second=0, microsecond=0)
+    wait_time = (next_minute - now).total_seconds()
+    print(f"현재 시간: {now}, 정각까지 대기 시간: {wait_time}초")
+    await asyncio.sleep(wait_time)
+    
+async def auto_send_notices():
+    """정각에 공지사항 전송"""
+    await bot.wait_until_ready()
+    print("자동 공지 대기 중...")
+    await wait_until_exact_minute()  # 정각까지 대기
+    print(f"자동 공지 실행 시작: {datetime.now()}")
 
-# === 봇 실행 ===
-bot.run(TOKEN)
+    for emoji, data in role_emoji_map.items():
+        channel = bot.get_channel(data["channel_id"])
+        if not channel:
+            print(f"채널 ID {data['channel_id']}를 찾을 수 없습니다.")
+            continue
+
+        existing_notices = load_existing_notices(txt_file)
+        if data.get("multi_page"):
+            new_notices = fetch_notices_multi_page(data["url"], data["role"], existing_notices)
+        else:
+            new_notices = fetch_notices(data["url"], data["role"], existing_notices)
+
+        if new_notices:
+            save_new_notices(txt_file, new_notices)
+            for notice in new_notices:
+                await channel.send(f"{notice['title']}\n[링크 보기]({notice['link']})")
+    print(f"자동 공지 실행 완료: {datetime.now()}")
+    await bot.close()  # 실행 완료 후 봇 종료
+
+
+
+# 종료 핸들러 추가
+def handle_exit(signum, frame):
+    print(f"프로세스 종료 시간: {datetime.now()}")
+    sys.exit(0)
+
+# SIGTERM(종료 신호) 처리
+signal.signal(signal.SIGTERM, handle_exit)
+
+# === 봇 실행 코드 ===
+if __name__ == "__main__":
+    print(f"프로세스 시작 시간: {datetime.now()}")
+    try:
+        bot.run(TOKEN)
+    except KeyboardInterrupt:
+        print("프로세스가 수동으로 종료되었습니다.")
+    finally:
+        print(f"프로세스 종료 시간: {datetime.now()}")
