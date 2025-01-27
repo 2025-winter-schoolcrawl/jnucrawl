@@ -9,6 +9,10 @@ rest_api_key = config.rest_api_key
 redirect_uri = config.redirect_uri
 authorize_code = config.authorize_code
 
+# 서브 스크립트의 디렉토리 기준으로 kakao_code.json 경로 설정
+script_dir = Path(__file__).parent
+file_path = script_dir / 'kakao_code.json'
+
 
 # 토큰 신규 발급
 def get_new_token():
@@ -22,7 +26,7 @@ def get_new_token():
     response = requests.post(url, data=data)
     tokens = response.json()
     print(tokens)
-    with open(r".\kakao_code.json","w") as fp:
+    with file_path.open("w", encoding='utf-8') as fp:
         json.dump(tokens, fp)
 
 
@@ -43,7 +47,7 @@ def refresh_classic_token(refresh_value):
         # access_token 업데이트
         data["access_token"] = new_access_token
         # JSON 파일 경로 객체로 변환
-        json_file = Path(r"./kakao_code.json")
+        json_file = Path(file_path)
         # JSON 파일에 저장
         try:
             with json_file.open('w', encoding='utf-8') as f:
@@ -57,10 +61,8 @@ def refresh_classic_token(refresh_value):
 
 # 토큰 정보 확인
 def read_token():
-    # JSON 파일의 경로
-    json_file_path = r".\kakao_code.json"
     # JSON 파일 열기 및 데이터 로드
-    with open(json_file_path, 'r', encoding='utf-8') as file:
+    with file_path.open('r', encoding='utf-8') as file:
         data = json.load(file)
 
     # refresh 값을 변수에 저장
@@ -69,8 +71,6 @@ def read_token():
 
 
 def main():
-    file_path = Path(r".\kakao_code.json")
-
     # 토큰 파일이 존재한다면 토큰 갱신
     if file_path.exists():
         refresh_token = read_token()

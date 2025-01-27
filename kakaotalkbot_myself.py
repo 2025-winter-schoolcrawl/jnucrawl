@@ -34,7 +34,7 @@ def convert_notice_to_text(notice):
 
 # 2. 내게 쓰기
 def send_myself(message_text, link):
-    with open(r"for_kakao\kakao_code.json", "r") as fp:
+    with open(r"./for_kakao/kakao_code.json", "r") as fp:
         tokens = json.load(fp)
 
     url="https://kapi.kakao.com/v2/api/talk/memo/default/send"
@@ -60,7 +60,7 @@ def send_myself(message_text, link):
 
 def main():
     # 0. 토큰 세팅
-    set_token(r"for_kakao/get_my_token.py")
+    set_token(r"./for_kakao/get_my_token.py")
 
     # 1. 크롤러 실행후 새로 갱신된 공지사항 추출 (새로운 공지사항이 있으면 crawl.txt에 기록)
     mod_vars = runpy.run_path("basic_webcrawler.py")
