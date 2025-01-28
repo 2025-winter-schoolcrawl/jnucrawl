@@ -5,6 +5,12 @@ import subprocess
 from pathlib import Path
 from datetime import datetime
 
+
+'''
+카카오톡 크롤링 봇을 실행하면, 서브프로세스와 메인프로세스간의 인코딩 차이로 에러가 발생합니다.
+하지만 프로그램 실행에 지장이 가지 않습니다. 무시하세요.
+"UnicodeDecodeError: 'cp949' codec can't decode byte 0xec in position 12: illegal multibyte sequence"
+'''
 # 0. 카카오 엑세스 토큰 발급, 재발급
 def set_token(script_path):
     # 스크립트의 경로 객체 생성
